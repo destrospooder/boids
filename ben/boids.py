@@ -12,31 +12,91 @@ NEIGHBOR_RADIUS = 50
 AVOID_RADIUS = 20
 MAX_SPEED = 5
 TRAIL_LENGTH = 25
-EPS = 1e-6
+FOV_ANGLE = 150  # degrees
+EPS = 1e-10
 SIM_DURATION = 60  # [s]]
 SEEDS = [27, 729, 4913]
 
 # gains
-k_coh = 0.1
-k_ali = 0.05
-k_col = 0.01
-k_wall = 100
-MAX_ACCEL = 0.5
+k_coh = 0.5
+k_ali = 0.01
+k_col = 0.05
+k_wall = 20
+MAX_ACCEL = 0.3
+
+class Obstacle:
+    def __init__(self, position, size, shape="circle"):
+        self.position = pygame.Vector2(position)
+        self.size = size  # radius if circle, half-width if square
+        self.shape = shape
+
+    def draw(self, surface):
+        if self.shape == "circle":
+            pygame.draw.circle(surface, (200, 50, 50), self.position, self.size)
+        elif self.shape == "square":
+            rect = pygame.Rect(0, 0, self.size * 2, self.size * 2)
+            rect.center = self.position
+            pygame.draw.rect(surface, (200, 50, 50), rect)
+
+obstacles = []
+
+def create_table_with_chairs(center, table_radius, num_chairs, chair_size, chair_distance):
+    obstacles.append(Obstacle(center, table_radius, shape="circle"))
+    angle_step = 360 / num_chairs
+    for i in range(num_chairs):
+        angle_deg = angle_step * i
+        angle_rad = math.radians(angle_deg)
+        chair_x = center[0] + math.cos(angle_rad) * chair_distance
+        chair_y = center[1] + math.sin(angle_rad) * chair_distance
+        obstacles.append(Obstacle((chair_x, chair_y), chair_size, shape="square"))
+
+create_table_with_chairs((200, 200), table_radius=40, num_chairs=8, chair_size=10, chair_distance=60)
+create_table_with_chairs((600, 400), table_radius=30, num_chairs=8, chair_size=10, chair_distance=50)
 
 class Boid:
     def __init__(self):
-        self.position = pygame.Vector2(random.uniform(50, WIDTH - 50), random.uniform(50, HEIGHT - 50))
+        while True:
+            pos = pygame.Vector2(random.uniform(50, WIDTH - 50), random.uniform(50, HEIGHT - 50))
+            inside_obstacle = any(
+                ((pos - obs.position).length() < obs.size if obs.shape == "circle"
+                 else abs(pos.x - obs.position.x) < obs.size and abs(pos.y - obs.position.y) < obs.size)
+                for obs in obstacles)
+            if not inside_obstacle:
+                break
+        self.position = pos
         angle = random.uniform(0, 2 * math.pi)
         self.velocity = pygame.Vector2(math.cos(angle), math.sin(angle)) * MAX_SPEED
         self.trail = []
 
-    def update(self, boids):
-        neighbors = [b for b in boids if b != self and self.position.distance_to(b.position) < NEIGHBOR_RADIUS]
+    def update(self, boids, obstacles):
+        neighbors = []
+        forward = self.velocity.normalize()
+
+        for b in boids:
+            if b == self:
+                continue
+            offset = b.position - self.position
+            distance = offset.length()
+            if distance < NEIGHBOR_RADIUS:
+                direction_to_b = offset.normalize()
+                dot_product = max(-1.0, min(1.0, forward.dot(direction_to_b)))
+                angle = math.degrees(math.acos(dot_product))
+                if angle < FOV_ANGLE / 2:
+                    neighbors.append(b)
 
         separation = pygame.Vector2(0, 0)
         alignment = pygame.Vector2(0, 0)
         cohesion = pygame.Vector2(0, 0)
         wall_avoidance = pygame.Vector2(0, 0)
+        obstacle_avoidance = pygame.Vector2(0, 0)
+
+        for obs in obstacles:
+            offset = self.position - obs.position
+            distance = offset.length()
+            avoid_dist = obs.size + 40
+            if distance < avoid_dist and distance > 0:
+                repulsion = offset.normalize() * (1 / (distance + EPS)) * 500
+                obstacle_avoidance += repulsion
 
         if neighbors:
             center = pygame.Vector2(0, 0)
@@ -64,7 +124,7 @@ class Boid:
             k_wall * (1.0 / (y + EPS) - 1.0 / (HEIGHT - y + EPS))
         )
 
-        priority_forces = [separation, wall_avoidance, alignment, cohesion]
+        priority_forces = [separation, obstacle_avoidance, wall_avoidance, alignment, cohesion]
         acceleration = pygame.Vector2(0, 0)
         remaining = MAX_ACCEL
 
@@ -91,12 +151,12 @@ class Boid:
         for i in range(1, len(self.trail)):
             pygame.draw.line(surface, (100, 100, 255), self.trail[i-1], self.trail[i], 1)
 
-        point1 = self.position + self.velocity.normalize() * 10
-        point2 = self.position + self.velocity.normalize().rotate(150) * 6
-        point3 = self.position + self.velocity.normalize().rotate(-150) * 6
+        direction = self.velocity.normalize()
+        point1 = self.position + direction * 10
+        point2 = self.position + direction.rotate(150) * 6
+        point3 = self.position + direction.rotate(-150) * 6
         pygame.draw.polygon(surface, (255, 255, 255), [point1, point2, point3])
 
-# for coverage mode
 def run_coverage_simulation():
     all_coverage = {}
     total_pixels = WIDTH * HEIGHT
@@ -116,7 +176,6 @@ def run_coverage_simulation():
 
         running = True
         while running:
-            time_delta = clock.tick(60) / 1000.0
             screen.fill((30, 30, 30))
             elapsed = time.time() - start_time
 
@@ -127,13 +186,20 @@ def run_coverage_simulation():
                 if event.type == pygame.QUIT:
                     running = False
 
+            for obs in obstacles:
+                obs.draw(screen)
+
             for boid in boids:
-                boid.update(boids)
+                boid.update(boids, obstacles)
                 boid.draw(screen)
 
                 px = int(boid.position.x)
                 py = int(boid.position.y)
-                if 0 <= px < WIDTH and 0 <= py < HEIGHT:
+                inside_obstacle = any(
+                    ((boid.position - obs.position).length() < obs.size if obs.shape == "circle"
+                     else abs(boid.position.x - obs.position.x) < obs.size and abs(boid.position.y - obs.position.y) < obs.size)
+                    for obs in obstacles)
+                if 0 <= px < WIDTH and 0 <= py < HEIGHT and not inside_obstacle:
                     visited_pixels.add((px, py))
 
             current_second = int(elapsed)
@@ -165,9 +231,10 @@ def run_coverage_simulation():
     plt.tight_layout()
     plt.show()
 
+
 # sliders
 def run_slider_simulation():
-    global k_coh, k_ali, k_col, k_wall, MAX_ACCEL
+    global k_coh, k_ali, k_col, k_wall, MAX_ACCEL, FOV_ANGLE
 
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -186,6 +253,7 @@ def run_slider_simulation():
         ('k_col', 0.0, 0.5, k_col),
         ('k_wall', 0.0, 500.0, k_wall),
         ('MAX_ACCEL', 0.1, 2.0, MAX_ACCEL),
+        ('FOV_ANGLE', 30, 360, FOV_ANGLE),
     ]
 
     slider_height = 20
@@ -238,13 +306,15 @@ def run_slider_simulation():
         k_col = sliders['k_col'].get_current_value()
         k_wall = sliders['k_wall'].get_current_value()
         MAX_ACCEL = sliders['MAX_ACCEL'].get_current_value()
+        FOV_ANGLE = sliders['FOV_ANGLE'].get_current_value()
 
         for k in sliders:
             value_labels[k].set_text(f"{sliders[k].get_current_value():.3f}")
 
         for boid in boids:
-            boid.update(boids)
+            boid.update(boids, obstacles)
             boid.draw(screen)
+
 
         # HUD
         gains_text = f"k_coh: {k_coh:.3f}  k_ali: {k_ali:.3f}  k_col: {k_col:.3f}  k_wall: {k_wall:.1f}  max_accel: {MAX_ACCEL:.2f}"
@@ -260,6 +330,7 @@ def run_slider_simulation():
 
 # toggle
 mode = input("Enter mode ('sliders' or 'coverage'): ").strip().lower()
+
 if mode == "coverage":
     run_coverage_simulation()
 else:
