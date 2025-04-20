@@ -29,6 +29,10 @@ class Obstacle:
         self.position = pygame.Vector2(position)
         self.size = size  # radius if circle, half-width if square
         self.shape = shape
+        # For rectangle, use width and height parameters
+        if shape == "rectangle":
+            self.width = size * 2 
+            self.height = size
 
     def draw(self, surface):
         if self.shape == "circle":
@@ -37,22 +41,64 @@ class Obstacle:
             rect = pygame.Rect(0, 0, self.size * 2, self.size * 2)
             rect.center = self.position
             pygame.draw.rect(surface, (200, 50, 50), rect)
+        elif self.shape == "rectangle":
+            # Use the width and height for rectangle
+            rect = pygame.Rect(0, 0, self.width, self.height)
+            rect.center = self.position
+            pygame.draw.rect(surface, (200, 50, 50), rect)
 
 obstacles = []
 
-def create_table_with_chairs(center, table_radius, num_chairs, chair_size, chair_distance):
-    obstacles.append(Obstacle(center, table_radius, shape="circle"))
-    angle_step = 360 / num_chairs
-    for i in range(num_chairs):
-        angle_deg = angle_step * i
-        angle_rad = math.radians(angle_deg)
-        chair_x = center[0] + math.cos(angle_rad) * chair_distance
-        chair_y = center[1] + math.sin(angle_rad) * chair_distance
-        obstacles.append(Obstacle((chair_x, chair_y), chair_size, shape="square"))
+def create_cafeteria_obstacles(local_obstacles):
+    def create_table_with_chairs(center, table_radius, num_chairs, chair_size, chair_distance):
+        obstacles.append(Obstacle(center, table_radius, shape="circle"))
+        angle_step = 360 / num_chairs
+        for i in range(num_chairs):
+            angle_deg = angle_step * i
+            angle_rad = math.radians(angle_deg)
+            chair_x = center[0] + math.cos(angle_rad) * chair_distance
+            chair_y = center[1] + math.sin(angle_rad) * chair_distance
+            obstacles.append(Obstacle((chair_x, chair_y), chair_size, shape="square"))
 
-create_table_with_chairs((200, 200), table_radius=40, num_chairs=8, chair_size=10, chair_distance=60)
-create_table_with_chairs((600, 400), table_radius=30, num_chairs=8, chair_size=10, chair_distance=50)
+    create_table_with_chairs((200, 200), table_radius=40, num_chairs=8, chair_size=10, chair_distance=60)
+    create_table_with_chairs((600, 400), table_radius=30, num_chairs=8, chair_size=10, chair_distance=50)
 
+def create_no_obstacles(local_obstacles):
+    # No obstacles, so do nothing
+    pass
+
+def create_narrow_corridor_obstacles(local_obstacles):
+    # Screen dimensions and center
+    center_x = WIDTH // 2
+    center_y = HEIGHT // 2
+    
+    # Corridor parameters
+    corridor_width = 60   # Width of the corridor
+    obstacle_width = 100  # Width of the obstacles
+    
+    # Create top obstacle - stretching from top to near middle
+    top_obstacle = Obstacle(
+        position=(center_x, center_y - corridor_width//2 - 135),   # 300 - 30 - 135 = 135 (half of obstalce height)
+        size=100,
+        shape="rectangle"
+    )
+    top_obstacle.width = obstacle_width
+    top_obstacle.height = HEIGHT//2 - corridor_width//2            # 300 - 30 = 270
+    
+    # Create bottom obstacle - stretching from near middle to bottom
+    bottom_obstacle = Obstacle(
+        position=(center_x, center_y + corridor_width//2 + 135),
+        size=100,
+        shape="rectangle"
+    )
+    bottom_obstacle.width = obstacle_width
+    bottom_obstacle.height = HEIGHT//2 - corridor_width//2
+    
+    # Add obstacles to global list
+    obstacles.append(top_obstacle)
+    obstacles.append(bottom_obstacle)
+
+    
 class Boid:
     def __init__(self):
         while True:
@@ -160,6 +206,30 @@ class Boid:
 def run_coverage_simulation():
     all_coverage = {}
     total_pixels = WIDTH * HEIGHT
+    
+    # Ask user for environment type
+    print("Choose an environment:")
+    print("1. Cafeteria")
+    print("2. No Obstacles")
+    print("3. Narrow Corridor")
+    
+    environment_choice = input("Enter your choice (1/2/3): ").strip()
+    
+    # Create obstacles based on user choice
+    local_obstacles = []
+    if environment_choice == '1':
+        create_cafeteria_obstacles(local_obstacles)
+        env_name = "Cafeteria"
+    elif environment_choice == '2':
+        create_no_obstacles(local_obstacles)
+        env_name = "No Obstacles"
+    elif environment_choice == '3':
+        create_narrow_corridor_obstacles(local_obstacles)
+        env_name = "Narrow Corridor"
+    else:
+        print("Invalid choice. Defaulting to No Obstacles.")
+        create_no_obstacles(local_obstacles)
+        env_name = "No Obstacles"
 
     def run_simulation(seed):
         random.seed(seed)
@@ -224,7 +294,7 @@ def run_coverage_simulation():
         plt.plot(range(len(percent)), percent, label=f"Seed {seed}")
     plt.xlabel("Time (s)")
     plt.ylabel("Screen Coverage (%)")
-    plt.title(f"Boid Coverage Over Time\nGains: k_coh={k_coh}, k_ali={k_ali}, k_col={k_col}, k_wall={k_wall}, max_accel={MAX_ACCEL}")
+    plt.title(f"Boid Coverage Over Time - {env_name}\nGains: k_coh={k_coh}, k_ali={k_ali}, k_col={k_col}, k_wall={k_wall}, max_accel={MAX_ACCEL}")    
     plt.ylim(0, 100)
     plt.legend()
     plt.grid(True)
