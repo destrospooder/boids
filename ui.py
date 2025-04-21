@@ -131,11 +131,11 @@ class UIManager:
         
         # Create sliders for the three behavior weights
         self.cohesion_slider = Slider(30, slider_y, slider_width, slider_height, 
-                                    0.0, 2.0, 1.0, "Cohesion")
+                                    0.0, 2.0, 0.5, "Cohesion")
         self.alignment_slider = Slider(30 + spacing, slider_y, slider_width, slider_height, 
-                                    0.0, 2.0, 1.0, "Alignment")
+                                    0.0, 2.0, 0.5, "Alignment")
         self.separation_slider = Slider(30 + spacing*2, slider_y, slider_width, slider_height, 
-                                    0.0, 2.0, 1.0, "Separation")
+                                    0.0, 2.0, 0.5, "Separation")
         
         # Create slider for number of boids
         self.boids_slider = Slider(30 + spacing*3, slider_y, slider_width, slider_height,
