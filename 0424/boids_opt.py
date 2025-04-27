@@ -9,7 +9,7 @@ from collections import defaultdict
 
 # params
 WIDTH, HEIGHT = 800, 600
-NUM_BOIDS = 100
+NUM_BOIDS = 50
 NEIGHBOR_RADIUS = 50
 AVOID_RADIUS = 20
 MAX_SPEED = 5
@@ -217,10 +217,10 @@ def run_random_search_optimization(num_vectors=NUM_OPTIMIZATION_ITERATIONS):
     for gvec, seed, cov in results:
         grouped[gvec].append((seed, cov))
 
-    with open(f"random_search_results_{env_name.replace(' ', '_').lower()}.csv", "w", newline="") as f:
+    with open(f"random_search_results_{env_name.replace(' ', '_').lower()}_boids_{NUM_BOIDS}.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "k_coh", "k_ali", "k_col",
+            "num_boids", "k_coh", "k_ali", "k_col",
             "coverage_seed_27", "coverage_seed_729", "coverage_seed_4913",
             "average"
         ])
@@ -231,12 +231,12 @@ def run_random_search_optimization(num_vectors=NUM_OPTIMIZATION_ITERATIONS):
             seed_to_cov = {seed: cov for seed, cov in seed_cov_pairs}
             cov_list = [seed_to_cov.get(seed, 0) for seed in sorted(SEEDS)]
             avg_cov = sum(cov_list) / len(cov_list)
-            writer.writerow([*gvec, *cov_list, avg_cov])
+            writer.writerow([NUM_BOIDS, *gvec, *cov_list, avg_cov])
             if avg_cov > best_cov:
                 best_cov = avg_cov
                 best = gvec
 
-    print("Best Gain Vector:", best, "with", f"{best_cov:.2f}%", "coverage")
+    print("Best Gain Vector for {NUM_BOIDS} boids:", best, "with", f"{best_cov:.2f}%", "coverage")
 
 if __name__ == "__main__":
     run_random_search_optimization()
