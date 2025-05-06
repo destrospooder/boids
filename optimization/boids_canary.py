@@ -78,7 +78,7 @@ def compute_coverage_uniformity(heatmap, obstacles):
 
 
 NUM_BOIDS = 50
-k_coh, k_ali, k_col = find_max_average('optimization/data/cafeteria_50.csv')
+k_coh, k_ali, k_col = find_max_average('boids/optimization/data/dense_100.csv')
 
 k_wall = 10
 MAX_ACCEL = 0.5
