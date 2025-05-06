@@ -150,7 +150,7 @@ The objective of this project is to implement and analyze the boids model for fl
 
 Collective behavior is a well-documented phenomenon in natural systems, observable in bird flocks, fish schools, and herds of terrestrial animals. These systems exhibit coordinated, large-scale movement patterns that appear to emerge from simple local interactions between individuals. Craig Reynolds formalized this concept with the boids model in his 1986 paper ``\emph{Flocks, Herds, and Schools: A Distributed Behavior Model}'' \cite{reynolds1987flocks}. This project builds on that framework by reimplementing Reynolds' original algorithm and extending it for use in robotic exploration tasks, with a focus on performance optimization through parameter tuning.
 
-The boids model is governed by three canonical local rules—separation, alignment, and cohesion—described in detail in Section 2.
+The boids model is governed by three canonical local rules: separation, alignment, and cohesion, described in detail in Section 2.
 
 \begin{figure}[h!]
     \centering
@@ -250,6 +250,7 @@ A fixed-radius disk of 2 pixels around each agent is used to approximate the age
 \subsection{Simulation Details}
 
 To support both visualization during development and efficient batch evaluation during optimization, two simulation modes were implemented:
+
 \begin{enumerate}[nosep]
     \item \textbf{Interactive Mode}: Used during development and for real-time demonstrations. This version includes full graphical rendering, mouse interaction for obstacle placement and target setting, and real-time parameter adjustment via sliders. It is primarily used to observe qualitative behaviors, test hypotheses, generate illustrative figures, and debug.
     \item \textbf{Headless Mode}: A stripped-down version of the simulator designed for speed and reproducibility. This version runs without rendering or user input. It supports parallel evaluation of gain vectors across multiple random seeds using Python's \texttt{multiprocessing} module. It is the default mode used for parameter sweeps and data collection.
