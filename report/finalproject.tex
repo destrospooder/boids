@@ -23,6 +23,7 @@
 \usepackage{placeins}
 \usepackage{newtxtext,newtxmath}
 \usepackage{ragged2e}
+\usepackage{multirow}
 \usepackage{url}
 \bibliographystyle{unsrt}
 
@@ -140,23 +141,16 @@
 \setcounter{page}{1}
 
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0.5em}
+\setlength{\parskip}{0.25em}
 \section*{Abstract}
 
 The objective of this project is to implement and analyze the boids model for flocking behavior, with a focus on optimizing its effectiveness for coverage tasks through systematic tuning of key behavioral parameters. By adjusting the core gains that govern alignment, cohesion, and separation, the same underlying framework can yield a wide spectrum of emergent group dynamics, ranging from tight, cohesive flocking to deliberate spatial dispersion. The implementation explores the practical applications of these behaviors for distributed robotics systems, with quantitative analysis of exploration across various parameter configurations and environmental scenarios.
-
-\newpage
 
 \section{Introduction}
 
 Collective behavior is a well-documented phenomenon in natural systems, observable in bird flocks, fish schools, and herds of terrestrial animals. These systems exhibit coordinated, large-scale movement patterns that appear to emerge from simple local interactions between individuals. Craig Reynolds formalized this concept with the boids model in his 1986 paper ``\emph{Flocks, Herds, and Schools: A Distributed Behavior Model}'' \cite{reynolds1987flocks}. This project builds on that framework by reimplementing Reynolds' original algorithm and extending it for use in robotic exploration tasks, with a focus on performance optimization through parameter tuning.
 
-The boids model operates on three fundamental steering rules, as seen in Figure \ref{fig:force_diagram}:
-\begin{itemize}[nosep]
-    \item \textbf{Separation}: Avoid collisions with nearby agents
-    \item \textbf{Alignment}: Match velocity and direction with neighbors
-    \item \textbf{Cohesion}: Move towards the average position of local flockmates
-\end{itemize}
+The boids model is governed by three canonical local rules—separation, alignment, and cohesion—described in detail in Section 2.
 
 \begin{figure}[h!]
     \centering
@@ -173,7 +167,7 @@ The simulator used for optimization also includes options for real-time paramete
 
 \section{Simulation Framework}
 
-To support systematic exploration and parameter optimization, a custom boids-based simulator was developed using PyGame, a Python library for 2D graphics and user interaction. The simulator can be seen in Figure \ref{fig:boids_sim}. This platform enables real-time visualization, modular integration of behavioral components, and controlled experimentation under various environmental conditions. The simulation runs at a fixed timestep of 60 frames per second, ensuring consistent physics and predictable agent behavior across different hardware configurations. The system uses discrete-time Euler integration to update each boid's velocity and position per frame. This ensures predictable physical updates and consistent motion behavior.
+To support systematic exploration and parameter optimization, a custom boids-based simulator was developed using PyGame, a Python library for 2D graphics and user interaction. The simulator can be seen in Figure \ref{fig:boids_sim}. The simulator supports both interactive and headless modes, with real-time visualization and batch optimization. Full implementation details are described in Section 3.3.
 
 \begin{figure}[h!]
     \centering
@@ -218,8 +212,7 @@ In addition to environmental modification, the simulator includes a targeting me
 
 \sloppypar
 To realistically simulate physical constraints, a prioritized acceleration framework was implemented. Each boid has a limited total acceleration budget per timestep. When multiple behavioral directives are active, higher-priority behaviors consume available acceleration first. Lower-priority behaviors are only applied if residual capacity remains. The prioritization hierarchy is as follows, from highest to lowest:
-
-\[\text{Obstacle Avoidance} > \text{Separation} > \text{Alignment} > \text{Cohesion} > \text{Target Seeking}\]
+\[\text{Obstacle Avoidance} \to \text{Separation} \to \text{Alignment} \to \text{Cohesion} \to \text{Target Seeking}\]
 
 Each force is applied sequentially and scaled to fit within the remaining acceleration budget. If the magnitude of a force exceeds the available capacity, it is truncated proportionally. Once the budget is depleted, all subsequent forces in the priority list are skipped for that timestep. This leads to behavior that dynamically adapts to situational demands, closely resembling real-world decision making under physical constraints. Compared to traditional weighted vector summation, this method provides a more biologically plausible and computationally realistic behavior model.
 
@@ -229,17 +222,18 @@ To evaluate the utility of the boids model for distributed exploration, a covera
 
 \subsection{Task Definition and Environments}
 
-Three distinct environments, as shown in Figure \ref{fig:boids_maps} were developed to assess the generality of exploration performance across varying spatial constraints:
+Four distinct environments, as shown in Figure \ref{fig:boids_maps} were developed to assess the generality of exploration performance across varying spatial constraints:
 \begin{itemize}[nosep]
-    \item \textbf{Empty Map}: An unobstructed arena used as a baseline for evaluating pure flocking behavior and maximum dispersion potential
-    \item \textbf{Narrow Corridor}: A scenario containing a bottleneck, requiring agents to transition through a constrained passage, thereby testing local reformation and dispersion under topological stress
+    \item \textbf{Dense Cafeteria Map}: A highly cluttered environment with tightly packed tables and surrounding chairs, which stresses local collision avoidance
     \item \textbf{Cafeteria Map}: A cluttered layout composed of circular (tables) and square (chairs) obstacles arranged in a semi-structured environment, simulating realistic indoor navigation challenges
+    \item \textbf{Narrow Corridor}: A scenario containing a bottleneck, requiring agents to transition through a constrained passage, which tests local reformation and dispersion under topological stress
+    \item \textbf{Empty Map}: An unobstructed arena used as a baseline for evaluating pure flocking behavior and maximum dispersion potential
 \end{itemize}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\linewidth]{boids_maps.png}
-    \caption{Evaluation environments used for testing: cafeteria map, narrow corridor, and empty map, from left to right. Each layout presents different navigational challenges and constraints.}
+    \includegraphics[width=\linewidth, trim=0 0 0 35, clip]{boids_maps.png}
+    \caption{Evaluation environments used for testing: dense cafeteria map, cafeteria map, narrow corridor, and empty map, from left to right. Each layout presents different navigational challenges and constraints.}
     \label{fig:boids_maps}
   \end{figure}
 
@@ -248,76 +242,137 @@ Three distinct environments, as shown in Figure \ref{fig:boids_maps} were develo
 The coverage percentage is defined:
 \[\text{Coverage} = \frac{\text{Unique visited pixels}}{\text{Total traversable pixels}} \times 100\%\]
 
-Here, traversable pixels are defined as all non-obstacle pixels in the environment. A pixel is considered visited if it falls within a fixed-radius disk centered at a boid's position during any simulation frame. Specifically, each boid marks pixels within a radius of 2 pixels per frame, representing an approximation of the physical footprint of the agent. Only pixels outside of obstacle regions are counted as visited.
+This metric captures the proportion of the environment that has been physically traversed by at least one agent during the simulation. It is particularly well-suited for decentralized robotic coverage tasks, where the objective is to ensure that all accessible regions are visited, regardless of the specific trajectories taken. Unlike path-efficiency or goal-reaching metrices, coverage emphasizes dispersion and collective reach, making it ideal for applications such as search-and-rescue and environmental monitoring, where spatial redundancy should be minimized.
 
-Additionally, a spatial distribution visualization (coverage heatmap) encodes visitation frequency via color intensity. This provides insight into patterns of redundancy, area neglect, and localized over-exploration. Heatmaps support qualitative assessment of whether agents are uniformly distributing coverage effort.
+A fixed-radius disk of 2 pixels around each agent is used to approximate the agent's effective footprint per frame. This provides a tractable and uniform discretization for coverage accumulation, while abstracting away platform-specific factors like body geometry. The 2-pixel radius was empirically selected to balance between over-counting due to overlapping footprints and under-sampling of narrow features in the environment.
+
 
 \subsection{Simulation Details}
 
-Compared to the interactive PyGame-based simulation used for development and visualization, the batch evaluation simulation used for optimization is a stripped-down and performance-focused variant. This version preserves the core behavioral logic but removes all non-essential components to maximize computational efficiency and scalability.
+To support both visualization during development and efficient batch evaluation during optimization, two simulation modes were implemented:
+\begin{enumerate}[nosep]
+    \item \textbf{Interactive Mode}: Used during development and for real-time demonstrations. This version includes full graphical rendering, mouse interaction for obstacle placement and target setting, and real-time parameter adjustment via sliders. It is primarily used to observe qualitative behaviors, test hypotheses, generate illustrative figures, and debug.
+    \item \textbf{Headless Mode}: A stripped-down version of the simulator designed for speed and reproducibility. This version runs without rendering or user input. It supports parallel evaluation of gain vectors across multiple random seeds using Python's \texttt{multiprocessing} module. It is the default mode used for parameter sweeps and data collection.
+\end{enumerate}
 
-The most notable change is the complete removal of graphics and visualization routines. Unlike the interactive simulation, which runs within a PyGame window and provides real-time visual feedback, the optimization version runs entirely headless. No rendering, frame drawing, or event handling is performed. This allows for simulations to be executed in parallel using the \texttt{multiprocessing} module, significantly accelerating the parameter search. Each simulation job is defined as a unique pair of a sampled gain vector and a fixed random seed. These jobs are distributed across worker processes to evaluate parameter configurations in parallel, significantly reducing overall runtime.
+The most notable change for optimization is the complete removal of graphics and visualization routines. Unlike the interactive simulation, which runs within a PyGame window and provides real-time visual feedback, the optimization version runs entirely headless. No rendering, frame drawing, or event handling is performed. This allows for simulations to be executed in parallel using the \texttt{multiprocessing} module, significantly accelerating the parameter search. Each simulation job is defined as a unique pair of a sampled gain vector and a fixed random seed. These jobs are distributed across worker processes to evaluate parameter configurations in parallel, significantly reducing overall runtime.
 
 Additionally, user interaction capabilities are stripped away. The optimization simulation does not support real-time obstacle placement or target assignment. Instead, each environment is instantiated procedurally at the start of each trial using one of the three aforementioned predefined layouts.
 
 Real-time parameter adjustment via sliders is replaced with randomized sampling of gain vectors within predefined bounds. Each gain vector is evaluated in a self-contained trial, allowing for fully automated search over the parameter space.
 
-Each trial begins by instantiating \(N = 100\) boids, each with randomized initial positions and velocities. Initial velocities are oriented uniformly at random in \([0, 2\pi)\) radians and scaled by the maximum speed. A validation step ensures that no boid is initialized within an obstacle's geometry. Each simulation runs for a fixed duration of 60 seconds, and the system updates at 60 frames per second, totaling 3600 simulation steps per trial. At each frame, behavioral forces are computed for each boid according to the prioritized behavior stack, the boids' states are updated, and visited pixel maps are updated accordingly.
+Each trial begins by instantiating \(N\) boids, each with randomized initial positions and velocities. Initial velocities are oriented uniformly at random in \([0, 2\pi)\) radians and scaled by the maximum speed. A validation step ensures that no boid is initialized within an obstacle's geometry. Each simulation runs for a fixed duration of 60 seconds, and the system updates at 60 frames per second, totaling 3600 simulation steps per trial. Behavioral forces are computed as described in Section 2 and used to update each agent’s state.
 
-In the optimization code, the simulation domain is adjusted into an 800\(\times\)600 pixel grid. This reduced resolution was chosen to balance coverage fidelity with computational efficiency, allowing for faster execution of large numbers of parallel trials without compromising the spatial complexity of the environment.
-
-All environmental features and agent initializations are fully deterministic given a fixed random seed, ensuring repeatable and unbiased performance measurements. For each gain vector, the simulation is evaluated across three random seeds (27, 729, and 4913). These seeds are used to initialize the PRNG for placement, velocity, and repeated sampling if the initial sample was rejected due to obstacle conflict.
+In the optimization code, the simulation domain is adjusted into an 800 \(\times\) 600 pixel grid. This reduced resolution was chosen to balance coverage fidelity with computational efficiency, allowing for faster execution of large numbers of parallel trials without compromising the spatial complexity of the environment. All environmental features and agent initializations are fully deterministic given a fixed random seed, ensuring repeatable and unbiased performance measurements. For each gain vector, the simulation is evaluated across three random seeds (27, 729, and 4913). These seeds are used to initialize the PRNG for placement, velocity, and repeated sampling if the initial sample was rejected due to obstacle conflict.
 
 \subsection{Optimization Process}
 
-\sloppypar
-A systematic random search procedure was employed to identify high-performing behavior parameters. A total of 2000 gain vectors were randomly sampled within the defined bounds, and other parameters like maximum acceleration, obstacle avoidance gain, and FOV were fixed. For each gain vector, simulations were run in parallel across all three random seeds using multiprocessing, and the results were aggregated. The output of each run includes per-seed coverage and the average across seeds. The best-performing parameter vector for each environment was identified by sorting configurations by average coverage percentage.
+To identify high-performing behavior parameters, we conducted a systematic random search over the space of flocking gains. Specifically, each gain vector consisted of the tuple \((k_\text{coh}, k_\text{ali}, k_\text{col})\). For each vector, coverage performance was evaluated under fixed environmental and simulation conditions.
+
+The gain values were sampled uniformly from the following bounded intervals:
+\begin{itemize}[nosep]
+    \item \(k_\text{coh} \in [0.0, 0.5]\)
+    \item \(k_\text{ali} \in [0.0, 0.1]\)
+    \item \(k_\text{col} \in [0.0, 0.5]\)
+\end{itemize}
+
+Initially, the alignment gain was sampled over a broader range \([0.0, 0.5]\), consistent with the other parameters. However, early simulation batches revealed that the most effective configurations, i.e., those yielding higher coverage, concentrated alignment values near zero. Boids with moderate-to-high alignment tended to collapse into rigid formations, reducing diversity of exploration. Based on this observation, the upper bound for \(k_\text{ali}\) was reduced in subsequent simulations to concentrate sampling on the empirically relevant subspace and reduce wasted evaluations.
+
+All other parameters were held constant across trials. Wall repulsion was fixed at \(k_\text{wall} = 10\), and each boid was subject to a total acceleration budget of 0.5 units per timestep. The maximum speed was set to 5 units. Each agent sensed neighbors within a 50-unit radius and a \(150^\circ\) field of view. Obstacle and wall repulsion forces were regularized using a small constant \(\varepsilon = 10^{-10}\) to avoid singularities.
+
+To assess scalability, simulations were conducted for both \(N = 50\) and \(N = 100\) boids across all four environments. This dual-configuration setup allows us to examine the sensitivity of coverage performance to swarm size. No structural modifications were made to the algorithm between these runs; only the agent count was varied.
 
 \section{Results and Discussion}
 
-\emph{Preliminary Results (04/24):}
+We conducted 48,000 simulations in total: 2000 gain vectors evaluated across three random seeds, four environmental types, and two swarm sizes (\(N = 50\) and \(N = 100\)). This extensive sweep enabled a broad characterization of the relationship between flocking gains and coverage effectiveness.
 
-The parameter sweep over the cohesion \(k_\text{coh}\), alignment \(k_\text{ali}\), and separation \(k_\text{col}\) gains was conducted in the Cafeteria environment, which contains a densely cluttered layout of circular and rectangular obstacles. Results (average coverage \% vs. each gain individually) are shown in Figure \ref{fig:gains}.
+Across all environments, alignment gain exhibited a strong negative correlation with coverage, especially beyond \(k_\text{ali} > 0.03\). In contrast, cohesion (\(k_\text{coh}\)) and separation (\(k_\text{col}\)) gains produced weaker, non-monotonic trends. These trends held for both swarm sizes, though the effects were more pronounced in obstacle-dense environments when \(N = 50\), due to increased fragmentation and bottleneck congestion.
+
+\subsection{Representative Results - Cafeteria Map (\(N = 100\))}
+
+Figure \ref{fig:gains} illustrates average coverage as a function of each gain parameter in the Cafeteria map with 100 boids. These plots typify the gain-performance relationships seen across environments. The best-performing gain vector \((k_\text{coh}, k_\text{ali}, k_\text{col}) = (0.213,0.003,0.003)\) achieved an average coverage of 85.76\%. Figure \ref{fig:caf_cov} shows cumulative coverage over time for this configuration, and Figure \ref{fig:caf_heatmap} presents corresponding coverage heatmaps across the three random seeds. The results confirm that low alignment, coupled with moderate separation and cohesion, yields both fast and spatially comprehensive exploration.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=\linewidth]{gains.png}
-\caption{Coverage scores across sampled gain vectors in the parameter search.}
+\includegraphics[width=\linewidth]{pics/cov_vs_gains/cafeteria_100.png}
+\caption{Scatter plots showing coverage percentage for sampled behavioral gain values during parameter search in the Cafeteria environment, for \(N = 100\) boids. Each point represents the average coverage across three random seeds for a given configuration. Gain values correspond to (a) \(k_\text{coh}\), (b) \(k_\text{ali}\), and (c) \(k_\text{col}\). Coverage values are truncated to the nearest 0.1\%}
 \label{fig:gains}
 \end{figure}
 
-Coverage does not appear to be highly sensitive to the value of \(k_\text{coh}\) within the sampled range \([0.0, 0.5]\). While some of the highest-performing configurations occur at mid-range cohesion values, there is no clear trend, suggesting that cohesion plays a secondary role in coverage performance under heavy obstacle density. There is a clear negative correlation between alignment gain \(k_\text{ali}\) and coverage. This indicates that excessive alignment behavior degrades exploration quality, likely due to overcoordination among boids. In highly constrained environments like the Cafeteria map, maintaining a unified velocity vector reduces group dispersion and leads to redundant coverage of already-visited areas. Finally, the relationship between separation gain \(k_\text{col}\) and coverage is quantitatively similar to cohesion: relatively flat with no dominant trend. However, slightly high coverage densities are observed for configurations with \(k_\text{col} > 0.2\), indicating that maintaining interpersonal distance modestly contributes to dispersion and therefore broader coverage. This effect is less pronounced than with alignment but still suggests some sensitivity to the balance between repulsion and aggregation.
-
-The highest-performing parameter configuration observed in the Cafeteria environment achieved an average coverage of 85.76\%. Coverage over time can be analyzed in Figure \ref{fig:caf_cov}, and frequency of coverage can be analyzed in Figure \ref{fig:caf_heatmap}. This occurred at gain vector \((k_\text{coh}, k_\text{ali}, k_\text{col}) = (0.213, 0.003, 0.003)\), which supports the hypothesis that minimizing coordinated velocity (alignment) while maintaining a moderate degree of spatial structure (via cohesion and separation) yields the most effective exploratory behavior. 
-
-On the heatmaps, warmer colors indicate higher visit frequency. The overlaid blue outlines denote obstacle locations, including circular tables and surrounding square chairs. Despite stochastic initialization, all runs show high overall coverage, with slight variations in path redundancy and unvisited regions.
-
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\linewidth]{cov_vs_gains/cafeteria_100.png}
-    \caption{Line plots showing percent coverage over time for optimal gain vector, for three seeds.}
+    \includegraphics[width=0.7\linewidth]{optimal_cov_vs_time/cafeteria_100.png}
+    \caption{Coverage over time for the best-performing gain vector \((k_\text{coh}, k_\text{ali}, k_\text{col}) = (0.213,0.003,0.003)\) in the Cafeteria environment for \(N = 100\) boids. Each line corresponds to a different random seed (27, 729, 4913).}
     \label{fig:caf_cov}
   \end{figure}
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=\linewidth]{heatmaps/cafeteria_100.png}
-\caption{Coverage heatmaps for the Cafeteria environment using three different random seeds (27, 729, and 4913).}
+\caption{Coverage heatmaps for the Cafeteria environment using the optimal gain vector across three random seeds (27, 729, 4913). Warmer colors indicate higher visitation frequency. Blue outlines represent obstacles, including circular tables and surrounding square chairs. Each image reflects the spatial distribution of cumulative agent movement over the 60-second simulation. Relevant statistical properties, such as coefficient of variation (CV) from the visitation frequencies, are also presented.}
 \label{fig:caf_heatmap}
 \end{figure}
 
-These findings suggest that for coverage tasks in cluttered environments, heterogeneity in agent motion is more beneficial than tight flocking. Coordination behaviors that promote uniformity, e.g., alignment, should be downregulated, while decentralized repulsion and loose cohesion provide a useful trade-off between safety and spatial dispersion. These design principles align well with real-world swarm robotics, where diversity in motion paths is key to avoiding stagnation and ensuring high coverage efficiency.
+\subsection{Coverage Uniformity}
+
+While total coverage captures the extent of spatial exploration, it does not reflect how evenly agents distribute themselves. To address this, we computed the coefficient of variation (CV) from the heatmap visitation frequencies:
+\[\text{CV} = \frac{\sigma}{\mu}\]
+
+where \(\mu\) and \(\sigma\) are the mean and standard deviation of visit counts across all traversable pixels. Lower CV values indicate more uniform exploration, while high CV suggests redundant trajectories or clustering. 
+
+In open environments, such as the empty map, CV values remained consistently low (\(\approx\)0.45), reflecting highly uniform dispersion. In contrast, the Dense Cafeteria yielded CVs in the range of (0.92-1.07) for both swarm sizes, with 100 boids slightly outperforming 50 in terms of balance. The heatmaps reveal that while core regions were consistently visited, peripheral and occluded areas remained underexplored, especially in sparse swarms.
+
+The Narrow Corridor further demonstrated the utility of CV. Even with similar total coverage, differences in how agents distributed themselves along the corridor led to CV fluctuations from 0.72 to 0.85. This shows that high coverage can still coincide with imbalanced spatial utilization, underscoring the importance of joint evaluation metrics. These results suggest that CV is a valuable metric in environments where spatial redundancy or clustering could degrade task efficiency.
+
+\subsection{Environment-Specific Behavior and Effect of Boid Count}
+
+The trends observed in the Cafeteria environment with 100 boids were broadly consistent across other maps (as shown in Table \ref{tab:cv_and_coverage}), with important differences driven by topology and swarm size. In the environment with no obstacles, most gain configurations yielded near-maximal coverage. Exploration was rapid and consistent across seeds, with minimal dependence on cohesion or separation tuning. This suggests that, in the absence of obstacles, simple repulsion and low alignment suffice to fully disperse the swarm.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|l|c|c|c|}
+    \hline
+    \textbf{Environment} & \textbf{Boids} & \textbf{CV} & \textbf{Avg. Coverage [\%]} \\
+    
+    \hline
+    \multirow{2}{*}{Dense Cafeteria}    & 50  & 1.0102 & 57.30 \\
+                                        & 100 & 0.9791 & 58.02 \\
+    \hline
+    \multirow{2}{*}{Cafeteria}          & 50  & 0.6398 & 86.50 \\
+                                        & 100 & 0.5609 & 85.76 \\
+    \hline
+    \multirow{2}{*}{Narrow Corridor}    & 50  & 0.7485 & 75.13 \\
+                                        & 100 & 0.8178 & 76.36 \\
+    \hline
+    \multirow{2}{*}{No Obstacles}       & 50  & 0.4542 & 96.23 \\
+                                        & 100 & 0.4441 & 96.81 \\
+    \hline
+    \end{tabular}
+    \caption{Coverage uniformity (CV) and average coverage across environments and swarm sizes. CV is reported as the mean of normalized standard deviation values across three seeds.}
+    \label{tab:cv_and_coverage}
+    \end{table}    
+
+In contrast, the Dense Cafeteria and Narrow Corridor environments exhibited lower coverage, greater seed-to-seed variance, and increased sensitivity to gain tuning. For instance, in the Dense Cafeteria, 50-boid swarms frequently failed to reach peripheral zones. Increasing the swarm size to 100 improved robustness to initial conditions and reduced localized clustering. Similarly, in the Narrow Corridor, lower boid counts often resulted in partial coverage due to agents failing to propagate across the central chokepoint, especially when cohesion and separation gains were very low.
+
+Across all environments, increasing the number of boids from 50 to 100 led to consistent improvements in both average coverage and spatial uniformity. These gains were most pronounced in obstacle-heavy maps, confirming that higher agent density helps mitigate the risk of local minima and fragmentation.
 
 \section{Limitations and Future Work}
 
-\sloppypar
-While the simulation successfully demonstrates how optimized boids parameters can enhance exploration performance, it operates under several simplifying assumptions that constrain generalizability. The model assumes perfect sensing, with agents having full and accurate awareness of all neighbors within a fixed perception radius and field of view. In practice, sensor noise, occlusions, and limited sensing fidelity can disrupt coordination and reduce system robustness. Additionally, all agents are modeled as homogeneous, with identical sensing, speed, and actuation capabilities. This assumption simplifies implementation but overlooks the influence of heterogeneous agent capabilities, which are common in real robotic systems and can have meaningful effects on group dynamics.
+While the simulation demonstrates that tuning boid parameters can enhance exploration performance, several assumptions constrain the applicability of these results to real-world robotic systems. First, the model assumes perfect sensing. Each agent is assumed to have accurate and instantaneous access to the states of all neighbors within its perception radius and field of view. This ignores sensor noise, occlusion, and communication delays, all of which can significantly impact behavior in physical deployments. Future work should explore how degraded sensing or limited bandwidth affects coordination and coverage.
 
-The environment is modeled as static and fully known, with obstacles placed at initialization and held fixed throughout the simulation. In contrast, many practical exploration tasks take place in dynamic and uncertain environments where obstacles may move or appear unpredictably. The simulation also omits physical considerations such as friction, inertia, or energy consumption. These factors are critical for deployment on real platforms, particularly when operating in domains like aerial or underwater robotics, where control authority is limited and energy management is a major constraint.
+Second, the agents are homogeneous. All boids use the same gain values, perception parameters, and motion constraints. While this simplifies analysis, it neglects the possibility of introducing agent heterogeneity to improve robustness or task efficiency. Exploring the effect of diverse behavior profiles, or allowing agents to adapt gains based on local context, may yield more resilient policies.
+
+Third, the environments are static and fully known. Obstacles are placed at initialization and remain fixed for the duration of the simulation. In practical exploration scenarios, agents must often navigate partially known or dynamic environments. Incorporating real-time mapping, obstacle detection, and local replanning would increase the relevance of the model for deployed systems.
+
+Fourth, the optimization objective is limited to total coverage. While coverage uniformity is evaluated using the coefficient of variation, it is not used to guide the parameter search directly. Incorporating a joint objective that balances extent and uniformity could produce more efficient and evenly distributed behaviors, especially in cluttered maps.
+
+Fifth, the simulation omits physical dynamics such as inertia, acceleration limits beyond a scalar cap, and energy consumption. These factors are important in domains like aerial or underwater robotics, where control authority is limited and motion is governed by more complex dynamics. Additionally, the current wall repulsion gain is set relatively high (10) to enforce strict boundary compliance in the absence of physical barriers or damping. While this is effective for containment in simulation, it may lead to unrealistic behaviors or unstable oscillations near walls if transferred directly to physical systems. Incorporating smoother wall interactions or physically plausible damping models could improve realism.
+
+Finally, the gain space was explored via random search, which, while robust and embarrassingly parallel, is inefficient in high-dimensional or multi-objective contexts. While sufficient for coarse exploration, this method becomes inefficient as the parameter space grows or if multiple objectives are introduced. More structured search methods, such as gradient-free optimizers or model-based approaches, could accelerate convergence and better exploit the structure of the gain-performance landscape.
 
 \section{Conclusion}
 
-This study demonstrates that the boids model, when tuned appropriately, can serve as a viable decentralized framework for distributed coverage tasks in complex environments. By systematically optimizing the core behavioral parameters governing alignment, cohesion, and separation, significant improvements in exploration efficiency were achieved, particularly in cluttered scenarios where coordination must be balanced with dispersion. The results suggest that minimal alignment, coupled with arbitrary cohesion and separation, yields the most effective coverage behavior under spatial constraints. These insights support the broader applicability of bio-inspired swarm algorithms in real-world robotic systems, particularly in scenarios where scalability, robustness, and adaptability are critical.
+This study demonstrates that the boids model, when tuned appropriately, can serve as a viable decentralized framework for distributed coverage tasks in complex environments. By systematically optimizing the core behavioral parameters governing alignment, cohesion, and separation, significant improvements in exploration efficiency were achieved, particularly in cluttered scenarios where coordination must be balanced with dispersion. The results suggest that minimal alignment and arbitrary levels of cohesion and separation, yields the most effective coverage behavior under spatial constraints. These insights support the broader applicability of bio-inspired swarm algorithms in real-world robotic systems, particularly in scenarios where scalability, robustness, and adaptability are critical.
 
 \bibliography{references}
 

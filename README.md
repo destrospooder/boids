@@ -9,5 +9,5 @@ We implement and analyze the boids model for flocking behavior, with a focus on 
 Here's a screenshot of the interactive simulator:
 ![pic1](report/pics/boids_sim.png)
 
-Here's a screenshot of the boids, tuned to optimal coverage, scurrying around three tested maps:
+Here's a screenshot of the boids, tuned to optimal coverage, scurrying around four tested maps:
 ![pic2](report/pics/boids_maps.png)
