@@ -23,7 +23,6 @@
 \usepackage{placeins}
 \usepackage{newtxtext,newtxmath}
 \usepackage{ragged2e}
-\usepackage{lineno}
 \usepackage{url}
 \bibliographystyle{unsrt}
 
@@ -98,9 +97,8 @@
 		\begin{flushleft}
 			\large
 			\textit{Authors:}\\
-            \textsc{Anonymous}
-            \text{ }\\
-            \text{ }\\
+            \textsc{Benjamin Aziel} \\
+            \textsc{Jason Chen}\\
             \text{ }\\
 		\end{flushleft}
 	\end{minipage}
@@ -133,11 +131,14 @@
 \pagenumbering{gobble}
 \pagebreak
 
+\abovedisplayskip=6pt
+\belowdisplayskip=0pt
+\abovedisplayshortskip=0pt
+\belowdisplayshortskip=0pt
 
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-\begin{linenumbers}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.5em}
 \section*{Abstract}
@@ -293,14 +294,14 @@ On the heatmaps, warmer colors indicate higher visit frequency. The overlaid blu
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\linewidth]{caf_cov.png}
+    \includegraphics[width=\linewidth]{cov_vs_gains/cafeteria_100.png}
     \caption{Line plots showing percent coverage over time for optimal gain vector, for three seeds.}
     \label{fig:caf_cov}
   \end{figure}
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=\linewidth]{caf_heatmap.png}
+\includegraphics[width=\linewidth]{heatmaps/cafeteria_100.png}
 \caption{Coverage heatmaps for the Cafeteria environment using three different random seeds (27, 729, and 4913).}
 \label{fig:caf_heatmap}
 \end{figure}
@@ -319,8 +320,6 @@ The environment is modeled as static and fully known, with obstacles placed at i
 This study demonstrates that the boids model, when tuned appropriately, can serve as a viable decentralized framework for distributed coverage tasks in complex environments. By systematically optimizing the core behavioral parameters governing alignment, cohesion, and separation, significant improvements in exploration efficiency were achieved, particularly in cluttered scenarios where coordination must be balanced with dispersion. The results suggest that minimal alignment, coupled with arbitrary cohesion and separation, yields the most effective coverage behavior under spatial constraints. These insights support the broader applicability of bio-inspired swarm algorithms in real-world robotic systems, particularly in scenarios where scalability, robustness, and adaptability are critical.
 
 \bibliography{references}
-
-\end{linenumbers}
 
 \appendix
 
