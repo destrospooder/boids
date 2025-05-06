@@ -9,7 +9,7 @@ from collections import defaultdict
 
 # params
 WIDTH, HEIGHT = 800, 600
-NUM_BOIDS = 100
+NUM_BOIDS = 50
 NEIGHBOR_RADIUS = 50
 AVOID_RADIUS = 20
 MAX_SPEED = 5
