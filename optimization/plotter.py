@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Load the CSV file
-df = pd.read_csv("optimization/data/narrow_100.csv")
+df = pd.read_csv("random_search_results_dense_cafeteria.csv")
 
 # Plot average coverage vs each gain parameter
 fig, axs = plt.subplots(1, 3, figsize=(18, 5))
