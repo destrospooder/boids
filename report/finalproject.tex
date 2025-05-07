@@ -190,21 +190,21 @@ The simulator implements the three canonical behaviors central to the boids mode
 The mathematical model implemented in this work is adapted from the original Boids formulation by Reynolds~\cite{reynolds1987flocks} and formalized based on principles presented in the Distributed Robotics course notes by Sung~\cite{sung2025distributed}. Within its perceived neighborhood \(\mathcal{N}_i(t)\), boid \(i\) computes a set of behavioral forces that determine its instantaneous acceleration. Let \(x_i \in \mathbb{R}^2\) denote the position of boid \(i\), and \(\dot{x}_i \in \mathbb{R}^2\) its velocity at time \(t\). These quantities are used to define the core behavioral forces governing flocking.
 
 The collision avoidance force \(f_{\text{col}}\) pushes the agent away from nearby flockmates to reduce local density. It is computed as a repulsive sum of displacement vectors from all neighbors in the visible neighborhood, scaled by a gain \(k_{\text{col}}\):
-\[ f_\text{col} = k_\text{col} \sum_{j \in \mathcal{N}_i(t)} (x_i - x_j) \]
+\begin{equation} f_\text{col} = k_\text{col} \sum_{j \in \mathcal{N}_i(t)} (x_i - x_j) \end{equation}
 
 For alignment and cohesion, the vector sum is normalized by the number of neighbors to compute the local average velocity and position, respectively; this ensures that the resulting steering direction reflects the group's overall tendency rather than being biased by the number or density of nearby agents. The alignment force \(f_\text{ali}\) encourages velocity matching with nearby flockmates. It is defined as the difference between the average velocity of visible neighbors and the agent’s current velocity, scaled by a gain \(k_\text{ali}\): 
-\[ f_\text{ali} = k_\text{ali} \left( \frac{1}{|\mathcal{N}_i(t)|} \sum_{j \in \mathcal{N}_i(t)} \dot{x}_j - \dot{x}_i \right) \]
+\begin{equation} f_\text{ali} = k_\text{ali} \left( \frac{1}{|\mathcal{N}_i(t)|} \sum_{j \in \mathcal{N}_i(t)} \dot{x}_j - \dot{x}_i \right) \end{equation}
 
 The cohesion force \(f_\text{coh}\) attracts the agent toward the center of mass of its neighborhood. It is computed as the displacement from the agent to the average position of its neighbors, scaled by \(k_\text{coh}\): 
-\[ f_\text{coh} = k_\text{coh} \left( \frac{1}{|\mathcal{N}_i(t)|} \sum_{j \in \mathcal{N}_i(t)} x_j - x_i \right) \]
+\begin{equation} f_\text{coh} = k_\text{coh} \left( \frac{1}{|\mathcal{N}_i(t)|} \sum_{j \in \mathcal{N}_i(t)} x_j - x_i \right) \end{equation}
 
 In addition to these flocking behaviors, agents also respond to environmental geometry. The obstacle avoidance force \(f_{\text{obs}}\) is computed as a sum of repulsive vectors from nearby obstacle locations \(o_m\), scaled by inverse squared distance to produce a smooth avoidance behavior. A small constant \(\varepsilon > 0\) is added to the denominator to avoid singularities:
-\[ f_\text{obs} = \sum_m \frac{x_i - o_m}{\left( \|x_i - o_m\| + \varepsilon \right)^2} \]
+\begin{equation} f_\text{obs} = \sum_m \frac{x_i - o_m}{\left( \|x_i - o_m\| + \varepsilon \right)^2} \end{equation}
 
-A special case of this is the wall repulsion force \(f_\text{wall}\), which keeps agents within the rectangular simulation bounds. This is treated as implicit obstacle repulsion from the domain boundaries of width \(W\) and height \(H\): \[ f_\text{wall} = k_\text{wall} \begin{bmatrix}
+A special case of this is the wall repulsion force \(f_\text{wall}\), which keeps agents within the rectangular simulation bounds. This is treated as implicit obstacle repulsion from the domain boundaries of width \(W\) and height \(H\): \begin{equation} f_\text{wall} = k_\text{wall} \begin{bmatrix}
 \frac{1}{x_i + \varepsilon} - \frac{1}{W - x_i + \varepsilon} \\
 \frac{1}{y_i + \varepsilon} - \frac{1}{H - y_i + \varepsilon}
-\end{bmatrix} \]
+\end{bmatrix} \end{equation}
 
 The simulator also supports direct user interaction to dynamically configure the environment during runtime. Users can place obstacles in the environment using mouse input. The simulator currently supports both circular and rectangular obstacle types. This system enables the creation of realistic and heterogeneous test environments without modifying source code. When the user clicks in the PyGame simulation window while in obstacle-placement mode, a new obstacle is instantiated at the cursor location and added to the environment. This mechanism allows rapid prototyping of complex environments, such as cluttered indoor scenes, facilitating evaluation of the flock's navigational agility and adaptability under different spatial constraints.
 
@@ -212,7 +212,7 @@ In addition to environmental modification, the simulator includes a targeting me
 
 \sloppypar
 To realistically simulate physical constraints, a prioritized acceleration framework was implemented. Each boid has a limited total acceleration budget per timestep. When multiple behavioral directives are active, higher-priority behaviors consume available acceleration first. Lower-priority behaviors are only applied if residual capacity remains. The prioritization hierarchy is as follows, from highest to lowest:
-\[\text{Obstacle Avoidance} \to \text{Separation} \to \text{Alignment} \to \text{Cohesion} \to \text{Target Seeking}\]
+\begin{equation}\text{Obstacle Avoidance} \to \text{Separation} \to \text{Alignment} \to \text{Cohesion} \to \text{Target Seeking}\end{equation}
 
 Each force is applied sequentially and scaled to fit within the remaining acceleration budget. If the magnitude of a force exceeds the available capacity, it is truncated proportionally. Once the budget is depleted, all subsequent forces in the priority list are skipped for that timestep. This leads to behavior that dynamically adapts to situational demands, closely resembling real-world decision making under physical constraints. Compared to traditional weighted vector summation, this method provides a more biologically plausible and computationally realistic behavior model.
 
@@ -240,7 +240,7 @@ Four distinct environments, as shown in Figure \ref{fig:boids_maps} were develop
 \subsection{Coverage Metrics}
 
 The coverage percentage is defined:
-\[\text{Coverage} = \frac{\text{Unique visited pixels}}{\text{Total traversable pixels}} \times 100\%\]
+\begin{equation}\text{Coverage} = \frac{\text{Unique visited pixels}}{\text{Total traversable pixels}} \times 100\%\end{equation}
 
 This metric captures the proportion of the environment that has been physically traversed by at least one agent during the simulation. It is particularly well-suited for decentralized robotic coverage tasks, where the objective is to ensure that all accessible regions are visited, regardless of the specific trajectories taken. Unlike path-efficiency or goal-reaching metrices, coverage emphasizes dispersion and collective reach, making it ideal for applications such as search-and-rescue and environmental monitoring, where spatial redundancy should be minimized.
 
@@ -277,7 +277,9 @@ The gain values were sampled uniformly from the following bounded intervals:
     \item \(k_\text{col} \in [0.0, 0.5]\)
 \end{itemize}
 
-Initially, the alignment gain was sampled over a broader range \([0.0, 0.5]\), consistent with the other parameters. However, early simulation batches revealed that the most effective configurations, i.e., those yielding higher coverage, concentrated alignment values near zero. Boids with moderate-to-high alignment tended to collapse into rigid formations, reducing diversity of exploration. Based on this observation, the upper bound for \(k_\text{ali}\) was reduced in subsequent simulations to concentrate sampling on the empirically relevant subspace and reduce wasted evaluations.
+Initially, the alignment gain was sampled over a broader range \([0.0, 0.5]\), consistent with the other parameters. The initial uniform sampling cube of \([0.0, 0.5]^3\) was chosen for an exploratory baseline, to get an empirical sense of how each parameter affects behavior, especially since the dynamics are nonlinear and the gain interactions are not obvious \emph{a priori}.
+
+However, early simulation batches revealed that the most effective configurations, i.e., those yielding higher coverage, concentrated alignment values near zero. Boids with moderate-to-high alignment tended to collapse into rigid formations, reducing diversity of exploration. Based on this observation, the upper bound for \(k_\text{ali}\) was reduced in subsequent simulations to concentrate sampling on the empirically relevant subspace and reduce wasted evaluations.
 
 All other parameters were held constant across trials. Wall repulsion was fixed at \(k_\text{wall} = 10\), and each boid was subject to a total acceleration budget of 0.5 units per timestep. The maximum speed was set to 5 units. Each agent sensed neighbors within a 50-unit radius and a \(150^\circ\) field of view. Obstacle and wall repulsion forces were regularized using a small constant \(\varepsilon = 10^{-10}\) to avoid singularities.
 
@@ -317,7 +319,7 @@ Figure \ref{fig:gains} illustrates average coverage as a function of each gain p
 \subsection{Coverage Uniformity}
 
 While total coverage captures the extent of spatial exploration, it does not reflect how evenly agents distribute themselves. To address this, we computed the coefficient of variation (CV) from the heatmap visitation frequencies:
-\[\text{CV} = \frac{\sigma}{\mu}\]
+\begin{equation}\text{CV} = \frac{\sigma}{\mu}\end{equation}
 
 where \(\mu\) and \(\sigma\) are the mean and standard deviation of visit counts across all traversable pixels. Lower CV values indicate more uniform exploration, while high CV suggests redundant trajectories or clustering. 
 
@@ -327,35 +329,72 @@ The Narrow Corridor further demonstrated the utility of CV. Even with similar to
 
 \subsection{Environment-Specific Behavior and Effect of Boid Count}
 
-The trends observed in the Cafeteria environment with 100 boids were broadly consistent across other maps (as shown in Table \ref{tab:cv_and_coverage}), with important differences driven by topology and swarm size. In the environment with no obstacles, most gain configurations yielded near-maximal coverage. Exploration was rapid and consistent across seeds, with minimal dependence on cohesion or separation tuning. This suggests that, in the absence of obstacles, simple repulsion and low alignment suffice to fully disperse the swarm.
+The trends observed in the Cafeteria environment with 100 boids were broadly consistent across other maps, with key differences driven by obstacle density, spatial constraints, and swarm size. In the No Obstacles map, most gain configurations yielded near-maximal coverage. Exploration was rapid and consistent across seeds, with minimal sensitivity to cohesion or separation tuning. This suggests that, in open domains, simple repulsion and low alignment suffice to fully disperse the swarm.
 
-\begin{table}[h!]
+Table~\ref{tab:coverage_by_seed_and_optimal_gain} reports per-seed coverage, average coverage, standard deviation, and the optimal gain configuration for each setting. The highest variance appears in the 50-boid trials within the Dense Cafeteria and Narrow Corridor environments, confirming the sensitivity of smaller swarms to initialization and local congestion. In contrast, the 100-boid configurations exhibited consistently higher coverage with lower variability.
+
+\begin{table}[H]
+    \footnotesize
     \centering
-    \begin{tabular}{|l|c|c|c|}
+    \begin{tabular}{|l|c|c|c|c|c|c|c|}
     \hline
-    \textbf{Environment} & \textbf{Boids} & \textbf{Avg. CV} & \textbf{Avg. Coverage [\%]} \\
-    
+    \textbf{Environment} & \textbf{Boids} & \textbf{27} & \textbf{729} & \textbf{4913} & \textbf{Avg. Cov. [\%]} & \textbf{StdDev} & \textbf{Optimal Gains} \\
     \hline
-    \multirow{2}{*}{Dense Cafeteria}    & 50  & 1.0102 & 57.30 \\
-                                        & 100 & 0.9791 & 58.02 \\
+    \multirow{2}{*}{Dense Cafeteria} 
+        & 50  & 57.11 & 58.30 & 56.50 & 57.30 & 0.91 & (0.477, 0.017, 0.001) \\
+        & 100 & 58.23 & 57.73 & 58.10 & 58.02 & 0.23 & (0.477, 0.017, 0.001) \\
     \hline
-    \multirow{2}{*}{Cafeteria}          & 50  & 0.6398 & 86.50 \\
-                                        & 100 & 0.5609 & 85.76 \\
+    \multirow{2}{*}{Cafeteria} 
+        & 50  & 86.89 & 86.11 & 86.50 & 86.50 & 0.39 & (0.367, 0.024, 0.007) \\
+        & 100 & 85.76 & 85.54 & 85.97 & 85.76 & 0.22 & (0.213, 0.003, 0.003) \\
     \hline
-    \multirow{2}{*}{Narrow Corridor}    & 50  & 0.7485 & 75.13 \\
-                                        & 100 & 0.8178 & 76.36 \\
+    \multirow{2}{*}{Narrow Corridor} 
+        & 50  & 74.53 & 75.31 & 75.55 & 75.13 & 0.52 & (0.179, 0.044, 0.008) \\
+        & 100 & 76.53 & 76.87 & 75.68 & 76.36 & 0.51 & (0.070, 0.010, 0.001) \\
     \hline
-    \multirow{2}{*}{No Obstacles}       & 50  & 0.4542 & 96.23 \\
-                                        & 100 & 0.4441 & 96.81 \\
+    \multirow{2}{*}{No Obstacles} 
+        & 50  & 96.04 & 96.28 & 96.37 & 96.23 & 0.17 & (0.159, 0.003, 0.010) \\
+        & 100 & 96.63 & 96.96 & 96.85 & 96.81 & 0.17 & (0.223, 0.001, 0.004) \\
     \hline
     \end{tabular}
-    \caption{Coverage uniformity (CV) and average coverage across environments and swarm sizes. CV is reported as the mean of normalized standard deviation values across three seeds.}
-    \label{tab:cv_and_coverage}
-    \end{table}    
+    \caption{Per-seed and average coverage performance for each environment and swarm size, corresponding to the gain configuration that produced the highest average coverage. Standard deviations quantify variability across seeds. Gains are rounded to three decimal places.}
+    \label{tab:coverage_by_seed_and_optimal_gain}
+\end{table}
 
-In contrast, the Dense Cafeteria and Narrow Corridor environments exhibited lower coverage, greater seed-to-seed variance, and increased sensitivity to gain tuning. For instance, in the Dense Cafeteria, 50-boid swarms frequently failed to reach peripheral zones. Increasing the swarm size to 100 improved robustness to initial conditions and reduced localized clustering. Similarly, in the Narrow Corridor, lower boid counts often resulted in partial coverage due to agents failing to propagate across the central chokepoint, especially when cohesion and separation gains were very low.
+To further analyze spatial consistency, Table~\ref{tab:normalized_cv} presents the normalized coefficient of variation (CV) in heatmap visitation frequencies for each seed and environment. Higher CV values indicate more uneven exploration. As expected, environments with more obstacles—especially the Dense Cafeteria—exhibited higher CVs, particularly with 50 boids. In contrast, coverage in the Empty map was both complete and spatially uniform, with CV values below 0.46 in all trials.
 
-Across all environments, increasing the number of boids from 50 to 100 led to consistent improvements in both average coverage and spatial uniformity. These gains were most pronounced in obstacle-heavy maps, confirming that higher agent density helps mitigate the risk of local minima and fragmentation.
+\begin{table}[H]
+    \footnotesize
+    \centering
+    \begin{tabular}{|l|c|c|c|c|c|}
+    \hline
+    \textbf{Environment} & \textbf{Boids} & \textbf{27} & \textbf{729} & \textbf{4913} & \textbf{Avg. Norm. CV} \\
+    \hline
+    \multirow{2}{*}{Dense Cafeteria}    
+        & 50  & 1.0685 & 0.9495 & 1.0126 & 1.0102 \\
+        & 100 & 1.0399 & 0.9764 & 0.9210 & 0.9791 \\
+    \hline
+    \multirow{2}{*}{Cafeteria}          
+        & 50  & 0.6312 & 0.6424 & 0.6457 & 0.6398 \\
+        & 100 & 0.5634 & 0.5584 & 0.5608 & 0.5609 \\
+    \hline
+    \multirow{2}{*}{Narrow Corridor}    
+        & 50  & 0.7358 & 0.7886 & 0.7211 & 0.7485 \\
+        & 100 & 0.8462 & 0.8026 & 0.8045 & 0.8178 \\
+    \hline
+    \multirow{2}{*}{No Obstacles}       
+        & 50  & 0.4526 & 0.4519 & 0.4581 & 0.4542 \\
+        & 100 & 0.4409 & 0.4467 & 0.4447 & 0.4441 \\
+    \hline
+    \end{tabular}
+    \caption{Normalized coefficient of variation (CV) in heatmap visitation frequency for each environment and swarm size, evaluated using the optimal gain vector. Values are reported per seed and averaged across seeds. Lower CV indicates more uniform spatial coverage.}
+    \label{tab:normalized_cv}
+\end{table}
+
+These results highlight that increasing the swarm size from 50 to 100 improved both overall coverage and spatial uniformity across all environments. The benefits were especially pronounced in cluttered maps, where higher agent density helped reduce fragmentation and improved robustness to initialization. In the Narrow Corridor, for instance, low boid counts often resulted in incomplete coverage due to agents failing to propagate beyond the bottleneck.
+
+The remaining coverage heatmaps and cumulative coverage plots for all environments and swarm sizes are available at the following link:
+\url{https://github.com/destrospooder/boids/tree/main/report/pics}.
 
 \subsection{Limitations and Future Work}
 
