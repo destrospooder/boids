@@ -77,8 +77,8 @@ def compute_coverage_uniformity(heatmap, obstacles):
     return variance, mean, std_dev
 
 
-NUM_BOIDS = 50
-k_coh, k_ali, k_col = find_max_average('optimization/data/dense_50.csv')
+NUM_BOIDS = 100
+k_coh, k_ali, k_col = find_max_average('boids/optimization/data/dense_100.csv')
 
 k_wall = 10
 MAX_ACCEL = 0.5
