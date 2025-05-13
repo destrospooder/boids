@@ -144,11 +144,11 @@
 \setlength{\parskip}{0.25em}
 \section*{Abstract}
 
-The objective of this project is to implement and analyze the boids model for flocking behavior, with a focus on optimizing its effectiveness for coverage tasks through systematic tuning of key behavioral parameters. By adjusting the core gains that govern alignment, cohesion, and separation, the same underlying framework can yield a wide spectrum of emergent group dynamics, ranging from tight, cohesive flocking to deliberate spatial dispersion. The implementation explores the practical applications of these behaviors for distributed robotics systems, with quantitative analysis of exploration across various parameter configurations and environmental scenarios.
+The objective of this project is to implement and analyze the boids model for flocking behavior, with a focus on optimizing its effectiveness for coverage tasks through systematic tuning of key behavioral parameters. By adjusting the core gains that govern alignment, cohesion, and separation, the same underlying framework can yield a wide spectrum of emergent group dynamics, ranging from tight, cohesive flocking to deliberate spatial dispersion. The implementation explores the practical applications of these behaviors for distributed robotics systems, with quantitative exploration analysis across various parameter configurations and environmental scenarios.
 
 \section{Introduction}
 
-Collective behavior is a well-documented phenomenon in natural systems, observable in bird flocks, fish schools, and herds of terrestrial animals. These systems exhibit coordinated, large-scale movement patterns that appear to emerge from simple local interactions between individuals. Craig Reynolds formalized this concept with the boids model in his 1986 paper ``\emph{Flocks, Herds, and Schools: A Distributed Behavior Model}'' \cite{reynolds1987flocks}. This project builds on that framework by reimplementing Reynolds' original algorithm and extending it for use in robotic exploration tasks, with a focus on performance optimization through parameter tuning.
+Collective behavior is a well-documented phenomenon in natural systems, observable in bird flocks, fish schools, and herds of terrestrial animals. These systems exhibit coordinated, large-scale movement patterns that appear to emerge from simple local interactions between individuals. Craig Reynolds formalized this concept with the boids model in his 1986 paper ``\emph{Flocks, Herds, and Schools: A Distributed Behavior Model}'' \cite{reynolds1987flocks}. This project builds on that framework by reimplementing Reynolds' original algorithm and extending it for use in robotic exploration tasks, focusing on performance optimization through parameter tuning.
 
 The boids model is governed by three canonical local rules: separation, alignment, and cohesion, described in detail in Section 2.
 
@@ -159,7 +159,7 @@ The boids model is governed by three canonical local rules: separation, alignmen
     \label{fig:force_diagram}
   \end{figure}
 
-Despite their simplicity, these rules give rise to complex, decentralized group dynamics without any global coordination. This makes the model highly relevant to applications such as swarm robotics, where systems must be scalable, robust to individual failures, and capable of adapting to unknown or dynamic environments.
+Despite their simplicity, these rules give rise to complex, decentralized group dynamics without global coordination. This makes the model highly relevant to applications such as swarm robotics, where systems must be scalable, robust to individual failures, and capable of adapting to unknown or dynamic environments.
 
 In this work, the boids model is repurposed for robotic coverage. Rather than merely replicating natural flocking behavior, the focus is on optimizing behavioral parameters, i.e., the weightings of separation, alignment, and cohesion, to achieve task-oriented objectives. The goal is to maximize coverage efficiency, defined by metrics such as area coverage and dispersion uniformity.
 
@@ -394,7 +394,7 @@ To further analyze spatial consistency, Table~\ref{tab:normalized_cv} presents t
 These results highlight that increasing the swarm size from 50 to 100 improved both overall coverage and spatial uniformity across all environments. The benefits were especially pronounced in cluttered maps, where higher agent density helped reduce fragmentation and improved robustness to initialization. In the Narrow Corridor, for instance, low boid counts often resulted in incomplete coverage due to agents failing to propagate beyond the bottleneck.
 
 The remaining coverage heatmaps and cumulative coverage plots for all environments and swarm sizes are available at the following link:
-\url{https://github.com/destrospooder/boids/tree/main/report/pics}.
+\url{https://github.com/destrospooder/boids/tree/main/report/pics}. They can also be found in Appendix A.
 
 \subsection{Limitations and Future Work}
 
@@ -414,8 +414,177 @@ Finally, the gain space was explored via random search, which, while robust and 
 
 This study demonstrates that the boids model, when tuned appropriately, can serve as a viable decentralized framework for distributed coverage tasks in complex environments. By systematically optimizing the core behavioral parameters governing alignment, cohesion, and separation, significant improvements in exploration efficiency were achieved, particularly in cluttered scenarios where coordination must be balanced with dispersion. The results suggest that minimal alignment and arbitrary levels of cohesion and separation, yields the most effective coverage behavior under spatial constraints. These insights support the broader applicability of bio-inspired swarm algorithms in real-world robotic systems, particularly in scenarios where scalability, robustness, and adaptability are critical.
 
+The complete dataset, simulator, optimization, and postprocessing scripts are available at \url{https://github.com/destrospooder/boids}.
+
 \bibliography{references}
 
+\newpage
+
 \appendix
+
+\appendix
+\section{Additional Figures}
+
+%----------------------------------------------------------------
+% Cafeteria, N = 50
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{cov_vs_gains/cafeteria_50.png}
+    \caption{Coverage vs.~gains for the Cafeteria map with $N=50$ boids.}
+    \label{fig:app:caf50_gains}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{optimal_cov_vs_time/cafeteria_50.png}
+    \caption{Coverage over time for the Cafeteria map with $N=50$ boids.}
+    \label{fig:app:caf50_time}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{heatmaps/cafeteria_50.png}
+    \caption{Coverage heatmap for the Cafeteria map with $N=50$ boids.}
+    \label{fig:app:caf50_heat}
+  \end{subfigure}
+  \caption{Coverage analysis for the Cafeteria environment with $N=50$ boids: (a) relationship between behavioral gains and coverage, (b) cumulative coverage over time, (c) visitation frequency heatmap.}
+  \label{fig:app:cafeteria50}
+\end{figure}
+
+%----------------------------------------------------------------
+% Dense Cafeteria, N = 50
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{cov_vs_gains/dense_50.png}
+    \caption{Coverage vs.~gains for the Dense Cafeteria map with $N=50$ boids.}
+    \label{fig:app:dense50_gains}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{optimal_cov_vs_time/dense_50.png}
+    \caption{Coverage over time for the Dense Cafeteria map with $N=50$ boids.}
+    \label{fig:app:dense50_time}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{heatmaps/dense_50.png}
+    \caption{Coverage heatmap for the Dense Cafeteria map with $N=50$ boids.}
+    \label{fig:app:dense50_heat}
+  \end{subfigure}
+  \caption{Coverage analysis for the Dense Cafeteria environment with $N=50$ boids: (a) coverage vs.~gains, (b) cumulative coverage over time, (c) coverage heatmap.}
+  \label{fig:app:densecaf50}
+\end{figure}
+
+%----------------------------------------------------------------
+% Dense Cafeteria, N = 100
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{cov_vs_gains/dense_100.png}
+    \caption{Coverage vs.~gains for the Dense Cafeteria map with $N=100$ boids.}
+    \label{fig:app:dense100_gains}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{optimal_cov_vs_time/dense_100.png}
+    \caption{Coverage over time for the Dense Cafeteria map with $N=100$ boids.}
+    \label{fig:app:dense100_time}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{heatmaps/dense_100.png}
+    \caption{Coverage heatmap for the Dense Cafeteria map with $N=100$ boids.}
+    \label{fig:app:dense100_heat}
+  \end{subfigure}
+  \caption{Coverage analysis for the Dense Cafeteria environment with $N=100$ boids: (a) coverage vs.~gains, (b) cumulative coverage over time, (c) coverage heatmap.}
+  \label{fig:app:densecaf100}
+\end{figure}
+
+%----------------------------------------------------------------
+% Empty Map, N = 50
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{cov_vs_gains/empty_50.png}
+    \caption{Coverage vs.~gains for the Empty map with $N=50$ boids.}
+    \label{fig:app:empty50_gains}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{optimal_cov_vs_time/empty_50.png}
+    \caption{Coverage over time for the Empty map with $N=50$ boids.}
+    \label{fig:app:empty50_time}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{heatmaps/empty_50.png}
+    \caption{Coverage heatmap for the Empty map with $N=50$ boids.}
+    \label{fig:app:empty50_heat}
+  \end{subfigure}
+  \caption{Coverage analysis for the Empty environment with $N=50$ boids: (a) coverage vs.~gains, (b) cumulative coverage over time, (c) coverage heatmap.}
+  \label{fig:app:empty50}
+\end{figure}
+
+%----------------------------------------------------------------
+% Empty Map, N = 100
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{cov_vs_gains/empty_100.png}
+    \caption{Coverage vs.~gains for the Empty map with $N=100$ boids.}
+    \label{fig:app:empty100_gains}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{optimal_cov_vs_time/empty_100.png}
+    \caption{Coverage over time for the Empty map with $N=100$ boids.}
+    \label{fig:app:empty100_time}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{heatmaps/empty_100.png}
+    \caption{Coverage heatmap for the Empty map with $N=100$ boids.}
+    \label{fig:app:empty100_heat}
+  \end{subfigure}
+  \caption{Coverage analysis for the Empty environment with $N=100$ boids: (a) coverage vs.~gains, (b) cumulative coverage over time, (c) coverage heatmap.}
+  \label{fig:app:empty100}
+\end{figure}
+
+%----------------------------------------------------------------
+% Narrow Corridor, N = 50
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{cov_vs_gains/narrow_50.png}
+    \caption{Coverage vs.~gains for the Narrow Corridor map with $N=50$ boids.}
+    \label{fig:app:narrow50_gains}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{optimal_cov_vs_time/narrow_50.png}
+    \caption{Coverage over time for the Narrow Corridor map with $N=50$ boids.}
+    \label{fig:app:narrow50_time}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{heatmaps/narrow_50.png}
+    \caption{Coverage heatmap for the Narrow Corridor map with $N=50$ boids.}
+    \label{fig:app:narrow50_heat}
+  \end{subfigure}
+  \caption{Coverage analysis for the Narrow Corridor environment with $N=50$ boids: (a) coverage vs.~gains, (b) cumulative coverage over time, (c) coverage heatmap.}
+  \label{fig:app:narrow50}
+\end{figure}
+
+%----------------------------------------------------------------
+% Narrow Corridor, N = 100
+\begin{figure}[h!]
+  \centering
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{cov_vs_gains/narrow_100.png}
+    \caption{Coverage vs.~gains for the Narrow Corridor map with $N=100$ boids.}
+    \label{fig:app:narrow100_gains}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{optimal_cov_vs_time/narrow_100.png}
+    \caption{Coverage over time for the Narrow Corridor map with $N=100$ boids.}
+    \label{fig:app:narrow100_time}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\linewidth}
+    \includegraphics[width=\linewidth]{heatmaps/narrow_100.png}
+    \caption{Coverage heatmap for the Narrow Corridor map with $N=100$ boids.}
+    \label{fig:app:narrow100_heat}
+  \end{subfigure}
+  \caption{Coverage analysis for the Narrow Corridor environment with $N=100$ boids: (a) coverage vs.~gains, (b) cumulative coverage over time, (c) coverage heatmap.}
+  \label{fig:app:narrow100}
+\end{figure}
+
 
 \end{document}
